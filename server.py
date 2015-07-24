@@ -32,12 +32,15 @@ width, height = image.size
 pixels = list(image.getdata())
 positions = list(range(len(pixels)))
 random.shuffle(positions)
-pointer = 0
+pointers = dict()
 
 print("Ready for WS connections!")
 
 def reply(message, websocket):
-	global pointer
+	global pointers
+	if(not websocket.id in pointers):
+		pointers[websocket.id] = 0;
+
 	if(type(message) == bytes):
 		unpacked = unpack_mesages(message, factory)
 		pixels_count = unpacked[0]['pixels']
@@ -47,10 +50,10 @@ def reply(message, websocket):
 	reply_messages = []
 
 	for i in range(pixels_count):
-		if(pointer >= len(positions)):
-			pointer = 0
+		if(pointers[websocket.id] >= len(positions)):
+			pointers[websocket.id] = 0
 			break
-		position = positions[pointer]
+		position = positions[pointers[websocket.id]]
 		y = position // width
 		x = position - (y * width)
 		(r,g,b) = pixels[position];
@@ -65,7 +68,7 @@ def reply(message, websocket):
 				'b': b
 			}
 		reply_messages.append(msg)
-		pointer += 1
+		pointers[websocket.id] += 1
 
 	if(type(message) == bytes):
 		packed = pack_messages(reply_messages)
@@ -76,11 +79,13 @@ def reply(message, websocket):
 
 @asyncio.coroutine
 def handler(websocket, path):
-    while True:
-        message = yield from websocket.recv()
-        if message is None:
-            break
-        yield from reply(message, websocket)
+	websocket.id = id(websocket)
+	print('New websocket {}'.format(websocket.id))
+	while True:
+		message = yield from websocket.recv()
+		if message is None:
+			break
+		yield from reply(message, websocket)
 
 
 start_server = websockets.serve(handler, '0.0.0.0', 8765)

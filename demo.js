@@ -34,8 +34,7 @@
 	countTarget = canvas.width * canvas.height;
 	singlePixelData[3] = 255;
 	
-	socket = new WebSocket("ws://" + window.location.hostname + ":8765");
-	socket.binaryType = 'arraybuffer';
+
 
 	function makeReqMsg() {
 		if(useJsonField.checked) {
@@ -79,35 +78,37 @@
 	goBtn.onclick = function() {
 		reqMsg = makeReqMsg(useJsonField.checked);
 		pixelCounter = 0;
+		socket = new WebSocket("ws://" + window.location.hostname + ":8765");
+		socket.binaryType = 'arraybuffer';
 
-		if(socket.readyState === 1) {
+		socket.onopen = function() {
 			toggleControls(false);
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
 			startT = window.performance.now();
 			socket.send(reqMsg);
-		}
-	};
-	
-	socket.onmessage = function(msg) {
-		var pixeldata;
+		};
 
-		if(msg.data instanceof ArrayBuffer) {
-			pixeldata = factory.unpackMessages(msg.data);
-		} else {
-			pixeldata = JSON.parse(msg.data);
-		}
+		socket.onmessage = function(msg) {
+			var pixeldata;
 
-		if(!noDrawField.checked) {
-			draw(pixeldata);
-		}
+			if(msg.data instanceof ArrayBuffer) {
+				pixeldata = factory.unpackMessages(msg.data);
+			} else {
+				pixeldata = JSON.parse(msg.data);
+			}
 
-		pixelCounter += pixeldata.length;
-		if(pixelCounter < countTarget) {
-			socket.send(reqMsg);	
-		} else {
-			toggleControls(true);
-			timeTakenField.value = (window.performance.now() - startT) / 1000;
+			if(!noDrawField.checked) {
+				draw(pixeldata);
+			}
 
-		}
+			pixelCounter += pixeldata.length;
+			if(pixelCounter < countTarget) {
+				socket.send(reqMsg);	
+			} else {
+				toggleControls(true);
+				timeTakenField.value = (window.performance.now() - startT) / 1000;
+				socket.close();
+			}
+		};
 	};
 })();
