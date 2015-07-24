@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+	<meta charset="utf-8">
+	<title>Schema Sockets Demo</title>
+	<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<style>
+
+	@font-face {
+	    font-family: 'quicksandregular';
+	    src: url('font/quicksand-regular-webfont.eot');
+	    src: url('font/quicksand-regular-webfont.eot?#iefix') format('embedded-opentype'),
+	         url('font/quicksand-regular-webfont.woff2') format('woff2'),
+	         url('font/quicksand-regular-webfont.woff') format('woff'),
+	         url('font/quicksand-regular-webfont.ttf') format('truetype'),
+	         url('font/quicksand-regular-webfont.svg#quicksandregular') format('svg');
+	    font-weight: normal;
+	    font-style: normal;
+	}
+
+	body {
+		font-family: quicksandregular;
+	}
+
+	.container {
+		margin-top: 1em;
+	}
+
+	.canvas-container {
+		text-align: center;
+	}
+	canvas {
+		border: 1px solid #bbb;
+		margin: 0 auto;
+	}
+	</style>
+	</head>
+	<body>
+	<div class="container">
+		<div class="row">
+			<div class="col-md-12">
+				<div class="panel panel-primary">
+					<div class="panel-heading">
+						Configuration
+					</div>
+					<div class="panel-body">
+						<form class="form-inline">
+							<div class="form-group">
+								<label for="pixels-per-msg">
+									Pixels per WS message:
+								</label>
+								<input  class="form-control" type="number" value="200" id="pixels-per-msg">
+							</div>
+							<div class="form-group">
+								<label for="no-draw-checkbox">
+									Don't draw anything:
+								</label>
+								<input  class="" type="checkbox" name="no-draw" id="no-draw-checkbox">
+							</div>
+
+							<div class="form-group">
+								<label for="use-json-checkbox">
+									Use json instead of schema-sockets:
+								</label>
+								<input  class="" type="checkbox" name="use-json" id="use-json-checkbox">
+							</div>
+							<br>
+							<div class="form-group">
+								<button id="go-button" class="btn btn-default">
+									GO!
+								</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+		<div class="col-md-8 canvas-container">
+			<canvas id="canvas"></canvas>
+			<div class="credits">
+				Princess Lauralye by Selenada <a href="http://www.deviantart.com/art/Princess-Lauralye-418132530">via DeviantArt</a>
+			</div>
+		</div>
+		<div class="performance col-md-4">
+				<label for="time-taken">Total time taken (seconds):</label>
+				<input type="text" id="time-taken" readonly="readonly">
+			</div>
+		</div>
+	</div>
+
+	<script src="node_modules/schema-messages/dist/schema-messages.js"></script>
+	<script src="demo.js"></script>
+	</body>
+</html>
