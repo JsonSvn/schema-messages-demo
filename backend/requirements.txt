@@ -1,0 +1,5 @@
+Pillow
+bidict
+future
+schema-messages
+websockets

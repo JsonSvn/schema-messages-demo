@@ -1,0 +1,1 @@
+../node_modules/schema-messages/dist/schema-messages.js
