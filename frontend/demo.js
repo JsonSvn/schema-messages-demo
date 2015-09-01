@@ -24,9 +24,10 @@
 		singlePixelData = singlePixelImgData.data,
 		pixelPerMsgField = document.getElementById('pixels-per-msg'),
 		noDrawField = document.getElementById('no-draw-checkbox'),
-		useJsonField = document.getElementById('use-json-checkbox'),
+		protocolField = document.getElementById('protocol-selector'),
 		timeTakenField = document.getElementById('time-taken'),
 		goBtn = document.getElementById('go-button'),
+		protoFile = dcodeIO.ProtoBuf.loadProtoFile("./messages.proto"),
 		reqMsg, socket, pixelCounter, countTarget, startT;
 
 	canvas.width = 300;
@@ -37,14 +38,25 @@
 
 
 	function makeReqMsg() {
-		if(useJsonField.checked) {
+		switch(protocolField.value) {
+			case 'json':
 			return JSON.stringify({
 				'pixels': pixelPerMsgField.value
 			});
-		} else {
+
+			case 'schema-messages':
 			reqMsg = new RequestMessage();
 			reqMsg.data.pixels = pixelPerMsgField.value;
 			return reqMsg.pack();
+
+			case 'protobuf':
+			var ReqMsgClass = protoFile.build('demo.RequestMessage');
+			reqMsg = new ReqMsgClass(parseInt(pixelPerMsgField.value, 10));
+			return reqMsg.toArrayBuffer();
+
+			default:
+			console.warn("unsupported protocol selected!");
+			return '';
 		}
 	}
 
@@ -62,7 +74,7 @@
 	}
 
 	function toggleControls(enable) {
-		var controls = [goBtn, pixelPerMsgField, noDrawField, useJsonField];
+		var controls = [goBtn, pixelPerMsgField, noDrawField, protocolField];
 		
 		controls.forEach(function(el) {
 			if(enable) {
@@ -76,25 +88,53 @@
 	}
 
 	goBtn.onclick = function() {
-		reqMsg = makeReqMsg(useJsonField.checked);
 		pixelCounter = 0;
 		socket = new WebSocket("ws://" + window.location.hostname + ":8765");
 		socket.binaryType = 'arraybuffer';
 
 		socket.onopen = function() {
+			socket.send(protocolField.value);
 			toggleControls(false);
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
 			startT = window.performance.now();
+			reqMsg = makeReqMsg();
 			socket.send(reqMsg);
 		};
 
 		socket.onmessage = function(msg) {
 			var pixeldata;
 
-			if(msg.data instanceof ArrayBuffer) {
-				pixeldata = factory.unpackMessages(msg.data);
-			} else {
+			switch(protocolField.value) {
+				case 'json':
 				pixeldata = JSON.parse(msg.data);
+				break;
+
+				case 'schema-messages':
+				pixeldata = factory.unpackMessages(msg.data);
+				break;
+
+				case 'protobuf':
+				DataMsgClass = protoFile.build('demo.DataMessage');
+				var last = 4,
+					view = new Uint32Array(msg.data.slice(0, 4)),
+					next_msg_length = view[0],
+					messages = [],
+					i;
+
+				while(next_msg_length) {
+					messages.push(msg.data.slice(last, last + next_msg_length));
+					view = new Uint32Array(msg.data.slice(last + next_msg_length, last + next_msg_length + 4));
+					last = last + next_msg_length + 4;
+					next_msg_length = view[0];
+				}
+
+				pixeldata = [];
+				for(i = 0, len = messages.length; i < len; i++) {
+					if(messages[i].byteLength) {
+						pixeldata.push(DataMsgClass.decode(messages[i]));
+					}
+				}
+				break;
 			}
 
 			if(!noDrawField.checked) {

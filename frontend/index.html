@@ -60,10 +60,14 @@
 							</div>
 
 							<div class="form-group">
-								<label for="use-json-checkbox">
-									Use json instead of schema-sockets:
+								<label for="protocol-selector">
+									Select protocol to use:
 								</label>
-								<input  class="" type="checkbox" name="use-json" id="use-json-checkbox">
+								<select name="protocol" id="protocol-selector">
+									<option value="json">json</option>
+									<option selected="selected" value="schema-messages">schema-messages</option>
+									<option value="protobuf">protobuf</option>
+								</select>
 							</div>
 							<br>
 							<div class="form-group">
@@ -91,6 +95,9 @@
 	</div>
 
 	<script src="/schema-messages.js"></script>
+	<script src="/Long.js"></script>
+	<script src="/ByteBufferAB.js"></script>
+	<script src="/ProtoBuf.js"></script>
 	<script src="/demo.js"></script>
 	</body>
 </html>

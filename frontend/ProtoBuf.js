@@ -1,0 +1,1 @@
+../bower_components/protobuf/dist/ProtoBuf.js

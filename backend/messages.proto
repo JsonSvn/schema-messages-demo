@@ -1,0 +1,13 @@
+package demo;
+
+message RequestMessage {
+  required uint32 pixel_count = 1;
+}
+
+message DataMessage {
+  required uint32 x = 1;
+  required uint32 y = 2;
+  required uint32 r = 3;
+  required uint32 g = 4;
+  required uint32 b = 5;
+}
