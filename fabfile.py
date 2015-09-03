@@ -154,6 +154,7 @@ def supervisor_config():
 		os.path.join(BASEDIR, "server-configs", "supervisor-schema-sockets-demo.ini")
 	)
 
+@task
 def deploy():
 	rsync()
 	post_rsync()
