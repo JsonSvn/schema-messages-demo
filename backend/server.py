@@ -4,6 +4,7 @@ import websockets
 import random
 import json
 import struct
+import msgpack
 
 from PIL import Image
 from schemamessages import MessageFactory, unpack_mesages, pack_messages
@@ -126,10 +127,38 @@ def reply_protobuf(message, websocket):
 	packed = b''.join(reply_messages)
 	yield from websocket.send(packed)
 	
+def reply_msgpack(message, websocket):
+	global pointers;
+	unpacked = msgpack.unpackb(message, encoding='utf-8')
+	pixels_count = int(unpacked['pixels'])
+	reply_messages = []
+
+	for i in range(pixels_count):
+		if(pointers[websocket.id] >= len(positions)):
+			pointers[websocket.id] = 0
+			break
+		position = positions[pointers[websocket.id]]
+		y = position // width
+		x = position - (y * width)
+		(r,g,b) = pixels[position];
+		msg = {
+			'x': x,
+			'y': y,
+			'r': r,
+			'g': g,
+			'b': b
+		}
+		reply_messages.append(msg)
+		pointers[websocket.id] += 1
+	packed = msgpack.packb(reply_messages, encoding='utf-8')
+	yield from websocket.send(packed)
+
+
 reply_functions = {
 	'json': reply_json,
 	'schema-messages': reply_schema_msg,
 	'protobuf': reply_protobuf,
+	'msgpack': reply_msgpack,
 }
 
 

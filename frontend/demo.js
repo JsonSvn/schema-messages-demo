@@ -54,6 +54,17 @@
 			reqMsg = new ReqMsgClass(parseInt(pixelPerMsgField.value, 10));
 			return reqMsg.toArrayBuffer();
 
+			case 'msgpack':
+			var asarray = msgpack.pack({
+				'pixels': pixelPerMsgField.value
+			}, false);
+			var asbuffer = new ArrayBuffer(asarray.length);
+			var view = new Uint8Array(asbuffer);
+			for(var i = 0; i < view.length; i++) {
+				view[i] = asarray[i];
+			}
+			return asbuffer;
+
 			default:
 			console.warn("unsupported protocol selected!");
 			return '';
@@ -102,7 +113,13 @@
 		};
 
 		socket.onmessage = function(msg) {
-			var pixeldata;
+			var pixeldata,
+				view,
+				last,
+				messages,
+				next_msg_length,
+				asbuffer,
+				i;
 
 			switch(protocolField.value) {
 				case 'json':
@@ -115,11 +132,10 @@
 
 				case 'protobuf':
 				DataMsgClass = protoFile.build('demo.DataMessage');
-				var last = 4,
-					view = new Uint32Array(msg.data.slice(0, 4)),
-					next_msg_length = view[0],
-					messages = [],
-					i;
+				last = 4;
+				view = new Uint32Array(msg.data.slice(0, 4));
+				next_msg_length = view[0];
+				messages = [];
 
 				while(next_msg_length) {
 					messages.push(msg.data.slice(last, last + next_msg_length));
@@ -134,6 +150,15 @@
 						pixeldata.push(DataMsgClass.decode(messages[i]));
 					}
 				}
+				break;
+
+				case 'msgpack':
+					view = new Uint8Array(msg.data);
+					asarray = [];
+					for(i = 0; i < view.length; i++) {
+						asarray.push(view[i]);
+					}
+					pixeldata = msgpack.unpack(asarray);
 				break;
 			}
 
