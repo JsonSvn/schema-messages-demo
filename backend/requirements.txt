@@ -1,5 +1,7 @@
 Pillow
 bidict
 future
-schema-messages
+schema-messages>=0.1.11
 websockets
+msgpack-python
+protobuf>=3.0.0a3

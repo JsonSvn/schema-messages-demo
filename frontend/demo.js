@@ -16,7 +16,7 @@
 		}
 	};
 
-	var factory = new MessageFactory(schema),
+	var factory = new schemaMessages.MessageFactory(schema),
 		RequestMessage = factory.get('RequestMessage'),
 		canvas = document.getElementById('canvas'),
 		ctx = canvas.getContext('2d'),
@@ -46,8 +46,8 @@
 
 			case 'schema-messages':
 			reqMsg = new RequestMessage();
-			reqMsg.data.pixels = pixelPerMsgField.value;
-			return reqMsg.pack();
+			reqMsg.pixels = pixelPerMsgField.value;
+			return schemaMessages.packMessage(reqMsg, factory);
 
 			case 'protobuf':
 			var ReqMsgClass = protoFile.build('demo.RequestMessage');
@@ -127,7 +127,7 @@
 				break;
 
 				case 'schema-messages':
-				pixeldata = factory.unpackMessages(msg.data);
+				pixeldata = schemaMessages.unpackMessages(msg.data, factory);
 				break;
 
 				case 'protobuf':

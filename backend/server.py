@@ -7,7 +7,7 @@ import struct
 import msgpack
 
 from PIL import Image
-from schemamessages import MessageFactory, unpack_mesages, pack_messages
+from schemamessages import MessageFactory, unpack_messages, pack_messages, pack_messages_of_single_type
 import messages_pb2
 
 
@@ -48,6 +48,11 @@ def set_protocol(message, websocket):
 		print('protocol set to {}'.format(message))
 		protocols[websocket.id] = message
 
+def cleanup(websocket):
+	print('Closing WS {}'.format(websocket.id))
+	del protocols[websocket.id]
+	del pointers[websocket.id]
+
 def reply_json(message, websocket):
 	global pointers;
 	
@@ -79,9 +84,10 @@ def reply_json(message, websocket):
 def reply_schema_msg(message, websocket):
 	global pointers
 
-	unpacked = unpack_mesages(message, factory)
+	unpacked = unpack_messages(message, factory)
 	pixels_count = unpacked[0]['pixels']
 	reply_messages = []
+	DataMessage = factory.get('DataMessage')
 
 	for i in range(pixels_count):
 		if(pointers[websocket.id] >= len(positions)):
@@ -91,10 +97,10 @@ def reply_schema_msg(message, websocket):
 		y = position // width
 		x = position - (y * width)
 		(r,g,b) = pixels[position];
-		msg = factory.get('DataMessage')(x=x, y=y, r=r, g=g, b=b)
+		msg = DataMessage(x=x, y=y, r=r, g=g, b=b)
 		reply_messages.append(msg)
 		pointers[websocket.id] += 1
-	packed = pack_messages(reply_messages)
+	packed = pack_messages_of_single_type(reply_messages)
 	yield from websocket.send(packed)
 
 
@@ -178,6 +184,7 @@ def handler(websocket, path):
 	while True:
 		message = yield from websocket.recv()
 		if message is None:
+			cleanup(websocket)
 			break
 		if(not websocket.id in protocols):
 			set_protocol(message, websocket)

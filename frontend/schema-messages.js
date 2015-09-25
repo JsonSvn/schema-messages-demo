@@ -1,1 +1,1 @@
-../node_modules/schema-messages/dist/schema-messages.js
+../bower_components/schema-messages/dist/schema-messages.js
